@@ -11,6 +11,9 @@ jobs:
   continuous-integration:
     runs-on: ubuntu-latest
     steps:
+      - name: checkout code
+        uses: actions/checkout@v4
+
       - name: install go
         uses: actions/setup-go@v4
         with:
