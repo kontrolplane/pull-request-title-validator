@@ -1,6 +1,6 @@
-# pull-request-title-validation
+# pull-request-title-validator
 
-The `pull-request-title-validation` GitHub Action helps ensuring that contributors provide informative and well-formatted titles - based on the [conventional-commits] specification. The titles of the pull request could then be used to create automated releases.
+The `pull-request-title-validator` GitHub Action helps ensuring that contributors provide informative and well-formatted titles - based on the [conventional-commits] specification. The titles of the pull request could then be used to create automated releases.
 
 [conventional-commits]: https://www.conventionalcommits.org/en/v1.0.0/ 
 
@@ -31,10 +31,10 @@ permissions:
   pull-requests: read
 
 jobs:
-  validation:
+  validator:
     name: validate-pull-request-title
     runs-on: ubuntu-latest
     steps:
       - name: validate pull request title
-        uses: kontrolplane/pull-request-title-validation@v1
+        uses: kontrolplane/pull-request-title-validator@v1
 ```

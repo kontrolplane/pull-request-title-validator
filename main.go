@@ -18,7 +18,7 @@ type Event struct {
 	PullRequest PullRequest `json:"pull_request"`
 }
 
-// The pull-request-title-validation function mankes sure that for each pull request created the
+// The pull-request-title-validator function mankes sure that for each pull request created the
 // title of the pull request adheres to a desired structure, in this case convention commit style.
 func main() {
 	githubEventName := os.Getenv("GITHUB_EVENT_NAME")

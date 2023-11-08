@@ -27,5 +27,5 @@ jobs:
       - name: checkout code
         uses: actions/checkout@v4
       
-      - name: pull request title validation
-        uses: ./ # kontrolplane/pull-request-title-validation@latest
+      - name: pull request title validator
+        uses: ./ # kontrolplane/pull-request-title-validator@latest
