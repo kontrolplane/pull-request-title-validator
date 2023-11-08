@@ -2,6 +2,10 @@ name: "pull request title validator"
 description: "Checks whether a pull request title adheres to the conventional commit specification"
 author: "Levi van Noort"
 
+branding:
+  icon: 'git-pull-request'
+  color: 'green'
+
 runs:
   using: "docker"
   image: "Dockerfile"
