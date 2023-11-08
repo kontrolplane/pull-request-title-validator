@@ -1,0 +1,7 @@
+name: "pull request title validation"
+description: "Checks whether a pull request title adheres to the conventional commit specification"
+author: "Levi van Noort"
+
+runs:
+  using: "docker"
+  image: "Dockerfile"
