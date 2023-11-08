@@ -1,4 +1,4 @@
-name: "pull request title validation"
+name: "pull request title validator"
 description: "Checks whether a pull request title adheres to the conventional commit specification"
 author: "Levi van Noort"
 
