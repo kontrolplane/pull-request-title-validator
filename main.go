@@ -40,7 +40,8 @@ func main() {
 
 	fmt.Printf("commit title type used: %s\n", titleType)
 	fmt.Printf("commit title scope used: %s\n", titleScope)
-	fmt.Printf("commit title message used: %s\n", titleMessage)
+	fmt.Printf("commit title message used: %s\n\n", titleMessage)
+	fmt.Printf("the commit message adheres to the configured standard")
 }
 
 func fetchTitle(githubEventPath string) string {
