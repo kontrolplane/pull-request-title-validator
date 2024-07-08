@@ -38,9 +38,9 @@ func main() {
 		os.Exit(1)
 	}
 
-	fmt.Printf("titleType: %s\n", titleType)
-	fmt.Printf("titleScope: %s\n", titleScope)
-	fmt.Printf("titleMessage: %s\n", titleMessage)
+	fmt.Printf("commit title type used: %s\n", titleType)
+	fmt.Printf("commit title scope used: %s\n", titleScope)
+	fmt.Printf("commit title message used: %s\n", titleMessage)
 }
 
 func fetchTitle(githubEventPath string) string {
@@ -84,6 +84,7 @@ func splitTitle(title string) (titleType string, titleScope string, titleMessage
 	// this part of the function extracts the message
 	if strings.Contains(title, ":") {
 		titleMessage = strings.SplitAfter(title, ":")[1]
+		titleMessage = strings.TrimSpace(titleMessage)
 	} else {
 		fmt.Println("No message was included in the pull request title.")
 		fmt.Println(desiredFormat)
@@ -100,5 +101,5 @@ func checkAgainstConventionTypes(titleType string, conventionTypes []string) err
 		}
 	}
 
-	return fmt.Errorf("The type passed '%s' is not present in the types allowed by the convention: %s\n", titleType, conventionTypes)
+	return fmt.Errorf("the type passed '%s' is not present in the types allowed by the convention: %s", titleType, conventionTypes)
 }
