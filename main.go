@@ -9,6 +9,7 @@ import (
 )
 
 var desiredFormat string = "<type>(optional: <scope>): <message>"
+var defaultConventionTypes []string = []string{"fix", "feat", "chore", "docs", "build", "ci", "refactor", "perf", "test"}
 
 type PullRequest struct {
 	Title string `json:"title"`
@@ -23,7 +24,7 @@ type Event struct {
 func main() {
 	githubEventName := os.Getenv("GITHUB_EVENT_NAME")
 	githubEventPath := os.Getenv("GITHUB_EVENT_PATH")
-	conventionTypes := []string{"fix", "feat", "chore", "docs", "build", "ci", "refactor", "perf", "test"}
+	conventionTypes := parseTypes(os.Getenv("INPUT_TYPES"), defaultConventionTypes)
 
 	if githubEventName != "pull_request" && githubEventName != "pull_request_target" {
 		fmt.Printf("Error: the 'pull_request' trigger type should be used, received '%s'\n", githubEventName)
@@ -87,7 +88,7 @@ func splitTitle(title string) (titleType string, titleScope string, titleMessage
 		titleMessage = strings.SplitAfter(title, ":")[1]
 		titleMessage = strings.TrimSpace(titleMessage)
 	} else {
-		fmt.Println("No message was included in the pull request title.")
+		fmt.Println("no message was included in the pull request title.")
 		fmt.Println(desiredFormat)
 		os.Exit(1)
 	}
@@ -103,4 +104,19 @@ func checkAgainstConventionTypes(titleType string, conventionTypes []string) err
 	}
 
 	return fmt.Errorf("the type passed '%s' is not present in the types allowed by the convention: %s", titleType, conventionTypes)
+}
+
+func parseTypes(input string, fallback []string) []string {
+	if input == "" {
+		fmt.Println("no custom list of commit types was passed using fallback.")
+		return fallback
+	}
+	types := strings.Split(input, ",")
+	for i := range types {
+		types[i] = strings.TrimSpace(types[i])
+	}
+	if len(types) == 0 {
+		return fallback
+	}
+	return types
 }
