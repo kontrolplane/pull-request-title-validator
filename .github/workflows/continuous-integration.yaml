@@ -29,5 +29,3 @@ jobs:
       
       - name: pull request title validator
         uses: ./ # kontrolplane/pull-request-title-validator@latest
-        with:
-          types: "fix,chore"
