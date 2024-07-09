@@ -88,7 +88,7 @@ func splitTitle(title string) (titleType string, titleScope string, titleMessage
 		titleMessage = strings.SplitAfter(title, ":")[1]
 		titleMessage = strings.TrimSpace(titleMessage)
 	} else {
-		fmt.Println("No message was included in the pull request title.")
+		fmt.Println("no message was included in the pull request title.")
 		fmt.Println(desiredFormat)
 		os.Exit(1)
 	}
@@ -108,6 +108,7 @@ func checkAgainstConventionTypes(titleType string, conventionTypes []string) err
 
 func parseTypes(input string, fallback []string) []string {
 	if input == "" {
+		fmt.Println("no custom list of commit types was passed using fallback.")
 		return fallback
 	}
 	types := strings.Split(input, ",")
