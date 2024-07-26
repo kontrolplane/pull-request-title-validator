@@ -25,6 +25,7 @@ func main() {
 	githubEventName := os.Getenv("GITHUB_EVENT_NAME")
 	githubEventPath := os.Getenv("GITHUB_EVENT_PATH")
 	conventionTypes := parseTypes(os.Getenv("INPUT_TYPES"), defaultConventionTypes)
+	scopes := parseScopes(os.Getenv("INPUT_SCOPES"))
 
 	if githubEventName != "pull_request" && githubEventName != "pull_request_target" {
 		fmt.Printf("Error: the 'pull_request' trigger type should be used, received '%s'\n", githubEventName)
@@ -36,6 +37,11 @@ func main() {
 
 	if err := checkAgainstConventionTypes(titleType, conventionTypes); err != nil {
 		fmt.Printf("The type passed '%s' is not present in the types allowed by the convention: %s\n", titleType, conventionTypes)
+		os.Exit(1)
+	}
+
+	if err := checkAgainstScopes(titleScope, scopes); err != nil && len(scopes) > 1 {
+		fmt.Println(err)
 		os.Exit(1)
 	}
 
@@ -106,6 +112,16 @@ func checkAgainstConventionTypes(titleType string, conventionTypes []string) err
 	return fmt.Errorf("the type passed '%s' is not present in the types allowed by the convention: %s", titleType, conventionTypes)
 }
 
+func checkAgainstScopes(titleScope string, scopes []string) error {
+	for _, scope := range scopes {
+		if titleScope == scope {
+			return nil
+		}
+	}
+
+	return fmt.Errorf("the scope '%s' is not allowed. Please choose from the following scopes: %s", titleScope, scopes)
+}
+
 func parseTypes(input string, fallback []string) []string {
 	if input == "" {
 		fmt.Println("no custom list of commit types was passed using fallback.")
@@ -119,4 +135,19 @@ func parseTypes(input string, fallback []string) []string {
 		return fallback
 	}
 	return types
+}
+
+func parseScopes(input string) []string {
+	if input == "" {
+		fmt.Println("no custom list of commit scopes was passed using fallback.")
+		return []string{}
+	}
+	scopes := strings.Split(input, ",")
+	for i := range scopes {
+		scopes[i] = strings.TrimSpace(scopes[i])
+	}
+	if len(scopes) == 0 {
+		return []string{}
+	}
+	return scopes
 }
