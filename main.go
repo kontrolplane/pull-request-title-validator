@@ -114,12 +114,12 @@ func checkAgainstConventionTypes(titleType string, conventionTypes []string) err
 
 func checkAgainstScopes(titleScope string, scopes []string) error {
 	for _, scope := range scopes {
-		if titleScope == scope {
+		if regexp.MustCompile("(?i)" + scope + "$").MatchString(titleScope) {
 			return nil
 		}
 	}
 
-	return fmt.Errorf("the scope '%s' is not allowed. Please choose from the following scopes: %s", titleScope, scopes)
+	return fmt.Errorf("the scope '%s' is not allowed. Please choose from the following patterns of scopes: %s", titleScope, scopes)
 }
 
 func parseTypes(input string, fallback []string) []string {
