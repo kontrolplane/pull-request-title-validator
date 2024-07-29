@@ -40,7 +40,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err := checkAgainstScopes(titleScope, scopes); err != nil && len(scopes) > 1 {
+	if err := checkAgainstScopes(titleScope, scopes); err != nil && len(scopes) >= 1 {
 		fmt.Println(err)
 		os.Exit(1)
 	}
