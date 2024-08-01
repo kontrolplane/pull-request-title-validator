@@ -17,7 +17,7 @@ feat(client): add component
 
 The action can be used with both the `pull_request` and `pull_request_target` trigger.
 
-`default`
+### Default
 
 ```yaml
 name: validate-pull-request-title
@@ -41,7 +41,7 @@ jobs:
         uses: kontrolplane/pull-request-title-validator@v1.2.0
 ```
 
-`custom types`
+### Custom types
 
 ```yaml
 name: validate-pull-request-title
@@ -67,7 +67,9 @@ jobs:
           types: "fix,feat,chore"
 ```
 
-`custom scopes`
+### Custom scopes
+
+Scopes support regular expression patterns, allowing you to define specific patterns to match the scopes you want to allow. You can also separate multiple scopes using commas.
 
 ```yaml
 name: validate-pull-request-title
@@ -88,7 +90,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: validate pull request title
-        uses: kontrolplane/pull-request-title-validator@v1.2.0
+        uses: kontrolplane/pull-request-title-validator@v1.4.0
         with:
-          scopes: "api,lang,parser"
+          scopes: "api,lang,parser,package/.+"
 ```
