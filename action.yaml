@@ -14,7 +14,7 @@ inputs:
   types:
     description: 'Comma-separated list of valid commit types'
     required: false
-    default: '"fix", "feat", "chore", "docs", "build", "ci", "refactor", "perf", "test"'
+    default: 'fix,feat,chore,docs,build,ci,refactor,perf,test'
   scopes:
     description: 'Comma-separated list of valid scopes'
     required: false
