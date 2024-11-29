@@ -95,7 +95,7 @@ jobs:
           scopes: "api,lang,parser,package/.+"
 ```
 
-## contributors
+## Contributors
 
 [//]: kontrolplane/generate-contributors-list
 
