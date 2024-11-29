@@ -104,7 +104,7 @@ func splitTitle(logger *slog.Logger, title string) (titleType string, titleScope
 	} else if index := strings.Index(title, ":"); strings.Contains(title, ":") {
 		titleType = title[:index]
 	} else {
-		logger.Error("No type was included in the pull request title.")
+		logger.Error("No type was included in the pull request title.", slog.String("desired format", desiredFormat))
 		os.Exit(1)
 	}
 
@@ -119,7 +119,7 @@ func splitTitle(logger *slog.Logger, title string) (titleType string, titleScope
 		titleMessage = strings.SplitAfter(title, ":")[1]
 		titleMessage = strings.TrimSpace(titleMessage)
 	} else {
-		logger.Error("No message was included in the pull request title.")
+		logger.Error("No message was included in the pull request title.", slog.String("desired format", desiredFormat))
 		os.Exit(1)
 	}
 
