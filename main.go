@@ -16,10 +16,10 @@ var desiredFormat string = "<type>(optional: <scope>): <message>"
 var defaultConventionTypes []string = []string{"fix", "feat", "chore", "docs", "build", "ci", "refactor", "perf", "test"}
 
 type config struct {
-	githubEventName string `env:"GITHUB_EVENT_NAME"`
-	githubEventPath string `env:"GITHUB_EVENT_PATH"`
-	types           string `env:"INPUT_TYPES"`
-	scope           string `env:"INPUT_SCOPE"`
+	GithubEventName string `env:"GITHUB_EVENT_NAME"`
+	GithubEventPath string `env:"GITHUB_EVENT_PATH"`
+	Types           string `env:"INPUT_TYPES"`
+	Scope           string `env:"INPUT_SCOPE"`
 }
 
 type PullRequest struct {
@@ -46,23 +46,24 @@ func main() {
 	})
 	logger := slog.New(logHandler)
 
-	logger.Info("starting pull-request-title-validator", slog.String("event", cfg.githubEventName))
+	logger.Info("starting pull-request-title-validator", slog.String("event", cfg.GithubEventName))
 
-	if cfg.githubEventName != "pull_request" && cfg.githubEventName != "pull_request_target" {
-		logger.Error("invalid event type", slog.String("event", cfg.githubEventName))
+	if cfg.GithubEventName != "pull_request" && cfg.GithubEventName != "pull_request_target" {
+		logger.Error("invalid event type", slog.String("event", cfg.GithubEventName))
 		os.Exit(1)
 	}
 
-	title := fetchTitle(logger, cfg.githubEventPath)
+	title := fetchTitle(logger, cfg.GithubEventPath)
 	titleType, titleScope, titleMessage := splitTitle(logger, title)
 
-	parsedTypes := parseTypes(logger, cfg.types, defaultConventionTypes)
-	parsedScope := parseScopes(logger, cfg.scope)
+	parsedTypes := parseTypes(logger, cfg.Types, defaultConventionTypes)
+	parsedScope := parseScopes(logger, cfg.Scope)
 
 	if err := checkAgainstConventionTypes(logger, titleType, parsedTypes); err != nil {
 		logger.Error("error while checking the type against the allowed types",
-			slog.String("input", cfg.githubEventName),
-			slog.Any("conventionTypes", parsedTypes),
+			slog.String("event name", cfg.GithubEventName),
+			slog.String("event path", cfg.GithubEventPath),
+			slog.Any("convention types", parsedTypes),
 		)
 		os.Exit(1)
 	}
