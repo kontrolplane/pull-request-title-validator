@@ -64,3 +64,10 @@ jobs:
         with:
           types: "fix,feat,chore"
 ```
+
+
+## contributors
+
+[//]: kontrolplane/generate-contributors-list
+
+[//]: kontrolplane/generate-contributors-list
