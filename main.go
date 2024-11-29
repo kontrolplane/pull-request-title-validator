@@ -6,10 +6,21 @@ import (
 	"os"
 	"regexp"
 	"strings"
+
+	"log/slog"
+
+	"github.com/caarlos0/env"
 )
 
 var desiredFormat string = "<type>(optional: <scope>): <message>"
 var defaultConventionTypes []string = []string{"fix", "feat", "chore", "docs", "build", "ci", "refactor", "perf", "test"}
+
+type config struct {
+	GithubEventName string `env:"GITHUB_EVENT_NAME"`
+	GithubEventPath string `env:"GITHUB_EVENT_PATH"`
+	Types           string `env:"INPUT_TYPES"`
+	Scope           string `env:"INPUT_SCOPE"`
+}
 
 type PullRequest struct {
 	Title string `json:"title"`
@@ -22,132 +33,144 @@ type Event struct {
 // The pull-request-title-validator function mankes sure that for each pull request created the
 // title of the pull request adheres to a desired structure, in this case convention commit style.
 func main() {
-	githubEventName := os.Getenv("GITHUB_EVENT_NAME")
-	githubEventPath := os.Getenv("GITHUB_EVENT_PATH")
-	conventionTypes := parseTypes(os.Getenv("INPUT_TYPES"), defaultConventionTypes)
-	scopes := parseScopes(os.Getenv("INPUT_SCOPES"))
 
-	if githubEventName != "pull_request" && githubEventName != "pull_request_target" {
-		fmt.Printf("Error: the 'pull_request' trigger type should be used, received '%s'\n", githubEventName)
+	var cfg config
+	if err := env.Parse(&cfg); err != nil {
+		fmt.Printf("unable to parse the environment variables: %v", err)
 		os.Exit(1)
 	}
 
-	title := fetchTitle(githubEventPath)
-	titleType, titleScope, titleMessage := splitTitle(title)
+	logHandler := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
+		AddSource: false,
+		Level:     slog.LevelInfo,
+	})
+	logger := slog.New(logHandler)
 
-	if err := checkAgainstConventionTypes(titleType, conventionTypes); err != nil {
-		fmt.Printf("The type passed '%s' is not present in the types allowed by the convention: %s\n", titleType, conventionTypes)
+	logger.Info("starting pull-request-title-validator", slog.String("event", cfg.GithubEventName))
+
+	if cfg.GithubEventName != "pull_request" && cfg.GithubEventName != "pull_request_target" {
+		logger.Error("invalid event type", slog.String("event", cfg.GithubEventName))
 		os.Exit(1)
 	}
 
-	if err := checkAgainstScopes(titleScope, scopes); err != nil && len(scopes) >= 1 {
-		fmt.Println(err)
+	title := fetchTitle(logger, cfg.GithubEventPath)
+	titleType, titleScope, titleMessage := splitTitle(logger, title)
+
+	parsedTypes := parseTypes(logger, cfg.Types, defaultConventionTypes)
+	parsedScope := parseScopes(logger, cfg.Scope)
+
+	if err := checkAgainstConventionTypes(logger, titleType, parsedTypes); err != nil {
+		logger.Error("error while checking the type against the allowed types",
+			slog.String("event name", cfg.GithubEventName),
+			slog.String("event path", cfg.GithubEventPath),
+			slog.Any("convention types", parsedTypes),
+		)
 		os.Exit(1)
 	}
 
-	fmt.Printf("commit title type used: %s\n", titleType)
-	fmt.Printf("commit title scope used: %s\n", titleScope)
-	fmt.Printf("commit title message used: %s\n\n", titleMessage)
-	fmt.Printf("the commit message adheres to the configured standard")
+	if err := checkAgainstScopes(logger, titleScope, parsedScope); err != nil && len(parsedScope) >= 1 {
+		logger.Error("error while checking the scope against the allowed scopes", slog.Any("error", err))
+		os.Exit(1)
+	}
+
+	logger.Info("commit title validated successfully",
+		slog.String("type", titleType),
+		slog.String("scope", titleScope),
+		slog.String("message", titleMessage),
+	)
+	logger.Info("the commit message adheres to the configured standard")
 }
 
-func fetchTitle(githubEventPath string) string {
-
+func fetchTitle(logger *slog.Logger, githubEventPath string) string {
 	var event Event
 	var eventData []byte
 	var err error
 
 	if eventData, err = os.ReadFile(githubEventPath); err != nil {
-		fmt.Printf("Problem reading the event json file: %v\n", err)
-		os.Exit(1)
+		logger.Error("Problem reading the event JSON file", slog.String("path", githubEventPath), slog.Any("error", err))
+		os.Exit(1) // You might want to return an empty string or handle this error upstream instead.
 	}
 
 	if err = json.Unmarshal(eventData, &event); err != nil {
-		fmt.Printf("Failed to unmarshal JSON: %v", err)
+		logger.Error("Failed to unmarshal JSON", slog.Any("error", err))
 		os.Exit(1)
 	}
 
 	return event.PullRequest.Title
 }
 
-func splitTitle(title string) (titleType string, titleScope string, titleMessage string) {
-
-	// this part of the function extracts the type
+func splitTitle(logger *slog.Logger, title string) (titleType string, titleScope string, titleMessage string) {
 	if index := strings.Index(title, "("); strings.Contains(title, "(") {
 		titleType = title[:index]
 	} else if index := strings.Index(title, ":"); strings.Contains(title, ":") {
 		titleType = title[:index]
 	} else {
-		fmt.Println("No type was included in the pull request title.")
-		fmt.Println(desiredFormat)
+		logger.Error("No type was included in the pull request title.", slog.String("desired format", desiredFormat))
 		os.Exit(1)
 	}
 
-	// this part of the function extracts the optional scope
 	if strings.Contains(title, "(") && strings.Contains(title, ")") {
 		scope := regexp.MustCompile(`\(([^)]+)\)`)
-		titleScope = scope.FindStringSubmatch(title)[1]
+		if matches := scope.FindStringSubmatch(title); len(matches) > 1 {
+			titleScope = matches[1]
+		}
 	}
 
-	// this part of the function extracts the message
 	if strings.Contains(title, ":") {
 		titleMessage = strings.SplitAfter(title, ":")[1]
 		titleMessage = strings.TrimSpace(titleMessage)
 	} else {
-		fmt.Println("no message was included in the pull request title.")
-		fmt.Println(desiredFormat)
+		logger.Error("No message was included in the pull request title.", slog.String("desired format", desiredFormat))
 		os.Exit(1)
 	}
 
 	return
 }
 
-func checkAgainstConventionTypes(titleType string, conventionTypes []string) error {
+func checkAgainstConventionTypes(logger *slog.Logger, titleType string, conventionTypes []string) error {
 	for _, conventionType := range conventionTypes {
 		if titleType == conventionType {
 			return nil
 		}
 	}
-
-	return fmt.Errorf("the type passed '%s' is not present in the types allowed by the convention: %s", titleType, conventionTypes)
+	logger.Error("Type not allowed by the convention", slog.String("type", titleType), slog.Any("allowedTypes", conventionTypes))
+	return fmt.Errorf("type '%s' is not allowed", titleType)
 }
 
-func checkAgainstScopes(titleScope string, scopes []string) error {
+func checkAgainstScopes(logger *slog.Logger, titleScope string, scopes []string) error {
 	for _, scope := range scopes {
 		if regexp.MustCompile("(?i)" + scope + "$").MatchString(titleScope) {
 			return nil
 		}
 	}
 
-	return fmt.Errorf("the scope '%s' is not allowed. Please choose from the following patterns of scopes: %s", titleScope, scopes)
+	return fmt.Errorf("scope '%s' is not allowed", titleScope)
 }
 
-func parseTypes(input string, fallback []string) []string {
+func parseTypes(logger *slog.Logger, input string, fallback []string) []string {
 	if input == "" {
-		fmt.Println("no custom list of commit types was passed using fallback.")
+		logger.Warn("No custom list of commit types passed, using fallback.")
 		return fallback
 	}
+
 	types := strings.Split(input, ",")
 	for i := range types {
 		types[i] = strings.TrimSpace(types[i])
 	}
-	if len(types) == 0 {
-		return fallback
-	}
+
 	return types
 }
 
-func parseScopes(input string) []string {
+func parseScopes(logger *slog.Logger, input string) []string {
 	if input == "" {
-		fmt.Println("no custom list of commit scopes was passed using fallback.")
+		logger.Warn("No custom list of commit scopes passed, using fallback.")
 		return []string{}
 	}
+
 	scopes := strings.Split(input, ",")
 	for i := range scopes {
 		scopes[i] = strings.TrimSpace(scopes[i])
 	}
-	if len(scopes) == 0 {
-		return []string{}
-	}
+
 	return scopes
 }

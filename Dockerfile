@@ -1,4 +1,4 @@
-FROM golang:1.21.3 AS build
+FROM golang:1.23.1 AS build
 WORKDIR /action
 COPY . .
 RUN CGO_ENABLED=0 go build -o pull-request-title-validator
