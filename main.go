@@ -143,7 +143,7 @@ func checkAgainstScopes(logger *slog.Logger, titleScope string, scopes []string)
 			return nil
 		}
 	}
-	logger.Error("Scope not allowed", slog.String("scope", titleScope), slog.Any("allowedScopes", scopes))
+
 	return fmt.Errorf("scope '%s' is not allowed", titleScope)
 }
 
@@ -152,10 +152,12 @@ func parseTypes(logger *slog.Logger, input string, fallback []string) []string {
 		logger.Warn("No custom list of commit types passed, using fallback.")
 		return fallback
 	}
+
 	types := strings.Split(input, ",")
 	for i := range types {
 		types[i] = strings.TrimSpace(types[i])
 	}
+
 	return types
 }
 
@@ -164,9 +166,11 @@ func parseScopes(logger *slog.Logger, input string) []string {
 		logger.Warn("No custom list of commit scopes passed, using fallback.")
 		return []string{}
 	}
+
 	scopes := strings.Split(input, ",")
 	for i := range scopes {
 		scopes[i] = strings.TrimSpace(scopes[i])
 	}
+
 	return scopes
 }
