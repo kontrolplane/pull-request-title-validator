@@ -88,7 +88,7 @@ func fetchTitle(logger *slog.Logger, githubEventPath string) string {
 
 	if eventData, err = os.ReadFile(githubEventPath); err != nil {
 		logger.Error("Problem reading the event JSON file", slog.String("path", githubEventPath), slog.Any("error", err))
-		os.Exit(1) // You might want to return an empty string or handle this error upstream instead.
+		os.Exit(1)
 	}
 
 	if err = json.Unmarshal(eventData, &event); err != nil {
@@ -100,30 +100,51 @@ func fetchTitle(logger *slog.Logger, githubEventPath string) string {
 }
 
 func splitTitle(logger *slog.Logger, title string) (titleType string, titleScope string, titleMessage string) {
-	if index := strings.Index(title, "("); strings.Contains(title, "(") {
-		titleType = title[:index]
-	} else if index := strings.Index(title, ":"); strings.Contains(title, ":") {
-		titleType = title[:index]
-	} else {
-		logger.Error("No type was included in the pull request title.", slog.String("desired format", desiredFormat))
+	// Split title into prefix (type/scope) and message parts using colon as separator
+	prefix, message, found := strings.Cut(title, ":")
+	if !found {
+		logger.Error("Title must include a message after the colon", 
+			slog.String("desired format", desiredFormat),
+			slog.String("title", title))
 		os.Exit(1)
 	}
 
-	if strings.Contains(title, "(") && strings.Contains(title, ")") {
-		scope := regexp.MustCompile(`\(([^)]+)\)`)
-		if matches := scope.FindStringSubmatch(title); len(matches) > 1 {
+	// Clean up the message part
+	titleMessage = strings.TrimSpace(message)
+
+	// Extract type and scope from the prefix
+	titleType, titleScope = extractTypeAndScope(prefix)
+
+	// Validate that we found a type
+	if titleType == "" {
+		logger.Error("Title must include a type", 
+			slog.String("desired format", desiredFormat),
+			slog.String("title", title))
+		os.Exit(1)
+	}
+
+	return titleType, titleScope, titleMessage
+}
+
+func extractTypeAndScope(prefix string) (titleType string, titleScope string) {
+	prefix = strings.TrimSpace(prefix)
+
+	// Check if prefix contains a scope in parentheses
+	if strings.Contains(prefix, "(") && strings.Contains(prefix, ")") {
+
+		// Extract scope using regex
+		scopeRegex := regexp.MustCompile(`\(([^)]+)\)`)
+
+		// 
+		if matches := scopeRegex.FindStringSubmatch(prefix); len(matches) > 1 {
 			titleScope = matches[1]
+			titleType = strings.TrimSpace(strings.Split(prefix, "(")[0])
+			return
 		}
 	}
 
-	if strings.Contains(title, ":") {
-		titleMessage = strings.SplitAfter(title, ":")[1]
-		titleMessage = strings.TrimSpace(titleMessage)
-	} else {
-		logger.Error("No message was included in the pull request title.", slog.String("desired format", desiredFormat))
-		os.Exit(1)
-	}
-
+	// If no scope found or invalid format, use entire prefix as type
+	titleType = prefix
 	return
 }
 
