@@ -19,7 +19,7 @@ type config struct {
 	GithubEventName string `env:"GITHUB_EVENT_NAME"`
 	GithubEventPath string `env:"GITHUB_EVENT_PATH"`
 	Types           string `env:"INPUT_TYPES"`
-	Scope           string `env:"INPUT_SCOPE"`
+	Scope           string `env:"INPUT_SCOPES"`
 }
 
 type PullRequest struct {
