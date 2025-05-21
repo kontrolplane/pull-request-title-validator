@@ -19,7 +19,7 @@ type config struct {
 	GithubEventName string `env:"GITHUB_EVENT_NAME"`
 	GithubEventPath string `env:"GITHUB_EVENT_PATH"`
 	Types           string `env:"INPUT_TYPES"`
-	Scope           string `env:"INPUT_SCOPE"`
+	Scopes          string `env:"INPUT_SCOPES"`
 }
 
 type PullRequest struct {
@@ -57,7 +57,7 @@ func main() {
 	titleType, titleScope, titleMessage := splitTitle(logger, title)
 
 	parsedTypes := parseTypes(logger, cfg.Types, defaultConventionTypes)
-	parsedScope := parseScopes(logger, cfg.Scope)
+	parsedScopes := parseScopes(logger, cfg.Scopes)
 
 	if err := checkAgainstConventionTypes(logger, titleType, parsedTypes); err != nil {
 		logger.Error("error while checking the type against the allowed types",
@@ -68,7 +68,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err := checkAgainstScopes(logger, titleScope, parsedScope); err != nil && len(parsedScope) >= 1 {
+	if err := checkAgainstScopes(logger, titleScope, parsedScopes); err != nil && len(parsedScopes) >= 1 {
 		logger.Error("error while checking the scope against the allowed scopes", slog.Any("error", err))
 		os.Exit(1)
 	}
