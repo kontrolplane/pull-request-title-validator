@@ -18,7 +18,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: update-contributors
-        uses: kontrolplane/generate-contributors-list@v1.0.0
+        uses: kontrolplane/generate-contributors-list@v1.1.0
         with:
           owner: kontrolplane
           repository: pull-request-title-validator
