@@ -5,6 +5,10 @@ on:
   schedule:
     - cron: '0 0 * * 0'
 
+permissions:
+  contents: write
+  pull-requests: write
+
 jobs:
   update-contributors:
     name: validate-pull-request-title
@@ -14,7 +18,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: update-contributors
-        uses: kontrolplane/generate-contributors-list@v1.0.0
+        uses: kontrolplane/generate-contributors-list@v1.1.0
         with:
           owner: kontrolplane
           repository: pull-request-title-validator
@@ -36,6 +40,7 @@ jobs:
         run: |
           git config user.name github-actions
           git config user.email github-actions@github.com
+          git checkout -b update-contributors
           git add README.md
           git commit -m "chore: update contributors section"
           git push -u origin update-contributors
