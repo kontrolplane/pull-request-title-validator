@@ -38,7 +38,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: validate pull request title
-        uses: kontrolplane/pull-request-title-validator@v1.4.2
+        uses: kontrolplane/pull-request-title-validator@v1.5.0
 ```
 
 ### Custom types
@@ -62,7 +62,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: validate pull request title
-        uses: kontrolplane/pull-request-title-validator@v1.4.2
+        uses: kontrolplane/pull-request-title-validator@v1.5.0
         with:
           types: "fix,feat,chore"
 ```
@@ -90,7 +90,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: validate pull request title
-        uses: kontrolplane/pull-request-title-validator@v1.4.2
+        uses: kontrolplane/pull-request-title-validator@v1.5.0
         with:
           scopes: "api,lang,parser,package/.+"
 ```
