@@ -1,6 +1,6 @@
 module github.com/kontrolplane/pull-request-title-validator
 
-go 1.23.1
+go 1.24.3
 
 require github.com/caarlos0/env v3.5.0+incompatible
 
